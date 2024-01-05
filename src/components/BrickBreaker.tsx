@@ -1,35 +1,35 @@
 import React, { useRef, useState, useEffect } from "react";
 
-// Global Variables
-var x = 200; // starting horizontal position of ball
-var y = 250; // starting vertical position of ball
-var dx = 1; // amount ball should move horizontally
-var dy = -3; // amount ball should move vertically
-// Variables set in init()
-var ctx, width, height, paddlex, bricks, brickWidth;
-
-var paddleh = 10; // paddle height (pixels)
-var paddlew = 75; // paddle width (pixels)
-var canvasMinX = 0; // minimum canvas x bounds
-var canvasMaxX = 0; // maximum canvas x bounds
-var intervalId = 0; // track refresh rate for calling draw()
-var nrows = 9; // number of rows of bricks
-var ncols = 9; // number of columns of bricks
-var brickHeight = 15; // height of each brick
-var padding = 1; // how far apart bricks are spaced
-
-var ballRadius = 10; // size of ball (pixels)
-// Change colors of bricks -- add as many colors as you like
-var brick_colors = ["darkred", "yellow", "darkgreen", "darkblue", "indigo"];
-var paddlecolor = "black";
-var ballcolor = "white";
-var backcolor = "grey";
-var status = "";
-var score = 0; // store the number of bricks eliminated
-var paused = false; // keeps track of whether the game is paused (true) or not (false)
-var bricks;
-
 function BrickBreaker() {
+  // Global Variables
+  let x = 200; // starting horizontal position of ball
+  let y = 250; // starting vertical position of ball
+  let dx = 1; // amount ball should move horizontally
+  let dy = -3; // amount ball should move vertically
+
+  let paddleh = 10; // paddle height (pixels)
+  let paddlew = 75; // paddle width (pixels)
+  let canvasMinX = 0; // minimum canvas x bounds
+  let canvasMaxX = 0; // maximum canvas x bounds
+  let intervalId = 0; // track refresh rate for calling draw()
+  let nrows = 9; // number of rows of bricks
+  let ncols = 9; // number of columns of bricks
+  let brickHeight = 15; // height of each brick
+  let padding = 1; // how far apart bricks are spaced
+
+  let ballRadius = 10; // size of ball (pixels)
+  // Change colors of bricks -- add as many colors as you like
+  let brick_colors = ["darkred", "yellow", "darkgreen", "darkblue", "indigo"];
+  let paddlecolor = "black";
+  let ballcolor = "white";
+  let backcolor = "grey";
+  let status = "";
+  let score = 0; // store the number of bricks eliminated
+  let paused = false; // keeps track of whether the game is paused (true) or not (false)
+  let [bricks, setBricks] = useState(
+    Array.from({ length: nrows }, () => Array(ncols).fill(true))
+  );
+
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -123,18 +123,18 @@ function BrickBreaker() {
       }
     }
 
-    // initialize array of bricks to be visible (true)
-    function init_bricks() {
-      bricks = new Array(nrows);
-      for (let i = 0; i < nrows; i++) {
-        // for each row of bricks
-        bricks[i] = new Array(ncols);
-        for (let j = 0; j < ncols; j++) {
-          // for each column of bricks
-          bricks[i][j] = true;
-        }
-      }
-    }
+    // // initialize array of bricks to be visible (true)
+    // function init_bricks() {
+    //   bricks = new Array(nrows);
+    //   for (let i = 0; i < nrows; i++) {
+    //     // for each row of bricks
+    //     bricks[i] = new Array(ncols);
+    //     for (let j = 0; j < ncols; j++) {
+    //       // for each column of bricks
+    //       bricks[i][j] = true;
+    //     }
+    //   }
+    // }
 
     // render the bricks
     function draw_bricks() {
@@ -232,7 +232,7 @@ function BrickBreaker() {
 
     // Commands
     clear();
-    init_bricks();
+    // init_bricks();
     draw_bricks();
     draw();
   }, []);
