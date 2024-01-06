@@ -11,7 +11,7 @@ function BrickBreaker() {
   let paddlew = 75; // paddle width (pixels)
   let canvasMinX = 0; // minimum canvas x bounds
   let canvasMaxX = 0; // maximum canvas x bounds
-  let intervalId = 0; // track refresh rate for calling draw()
+  let [intervalId, setIntervalId] = useState(null);
   let nrows = 9; // number of rows of bricks
   let ncols = 9; // number of columns of bricks
   let brickHeight = 15; // height of each brick
@@ -29,6 +29,7 @@ function BrickBreaker() {
   let [bricks, setBricks] = useState(
     Array.from({ length: nrows }, () => Array(ncols).fill(true))
   );
+  let [mouseX, setMouseX] = useState(0);
 
   const canvasRef = useRef(null);
 
@@ -55,6 +56,10 @@ function BrickBreaker() {
       var brickWidth = width / ncols - 1;
       var canvasMinX = 0;
       var canvasMaxX = canvasMinX + width;
+      init_bricks();
+      clear();
+      draw_bricks();
+      start_animation();
     }
 
     function reload() {
@@ -66,7 +71,7 @@ function BrickBreaker() {
       score = 0;
       status = "";
       // update_status_text();
-      // init();
+      init();
     }
 
     // used to draw the ball
@@ -92,15 +97,18 @@ function BrickBreaker() {
       rect(0, 0, width, height);
     }
 
-    // What do to when the mouse moves within the canvas
-    function onMouseMove(evt) {
-      // set the paddle position if the mouse position
-      // is within the borders of the canvas
-      if (evt.pageX > canvasMinX && evt.pageX < canvasMaxX) {
-        paddlex = Math.max(evt.pageX - canvasMinX - paddlew / 2, 0);
-        paddlex = Math.min(width - paddlew, paddlex);
+    let onMouseMove = (event) => {
+      if (canvas) {
+        const canvasPos = canvas.getBoundingClientRect();
+        const mouseX = event.clientX - canvasPos.left;
+        if (mouseX > 0 && mouseX < width) {
+          paddlex = Math.max(mouseX - paddlew / 2, 0);
+          paddlex = Math.min(width - paddlew, paddlex);
+        }
       }
-    }
+    };
+
+    canvas.addEventListener("mousemove", onMouseMove);
 
     function onKeyPress(evt) {
       pause();
@@ -123,18 +131,13 @@ function BrickBreaker() {
       }
     }
 
-    // // initialize array of bricks to be visible (true)
-    // function init_bricks() {
-    //   bricks = new Array(nrows);
-    //   for (let i = 0; i < nrows; i++) {
-    //     // for each row of bricks
-    //     bricks[i] = new Array(ncols);
-    //     for (let j = 0; j < ncols; j++) {
-    //       // for each column of bricks
-    //       bricks[i][j] = true;
-    //     }
-    //   }
-    // }
+    // initialize array of bricks to be visible (true)
+    function init_bricks() {
+      const newBricks = Array.from({ length: nrows }, () =>
+        Array(ncols).fill(true)
+      );
+      setBricks(newBricks);
+    }
 
     // render the bricks
     function draw_bricks() {
@@ -196,10 +199,11 @@ function BrickBreaker() {
           dy = -dy;
         }
       }
-      if (y + dy > height) {
+      if (y + dy > 300) {
         //game over, so stop the animation
         status = "Game Over";
         // update_status_text();
+        return;
         // stop_animation();
       }
       x += dx;
@@ -223,19 +227,23 @@ function BrickBreaker() {
     }
 
     function start_animation() {
-      intervalId = setInterval(draw, 10);
+      if (intervalId === null) {
+        // Only start a new interval if one isn't already running
+        const newIntervalId = setInterval(draw, 10);
+        setIntervalId(newIntervalId);
+      }
     }
 
     function stop_animation() {
-      clearInterval(intervalId);
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+        setIntervalId(null); // Reset the interval ID after clearing
+      }
     }
 
     // Commands
-    clear();
-    // init_bricks();
-    draw_bricks();
-    draw();
-  }, []);
+    init();
+  }, [x]);
 
   return (
     <div>
