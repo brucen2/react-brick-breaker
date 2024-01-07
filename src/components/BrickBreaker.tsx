@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 
 function BrickBreaker() {
   // State for ball position and velocity
@@ -26,8 +26,8 @@ function BrickBreaker() {
   const [status, setStatus] = useState(" ");
 
   // Other variables
-  const canvasRef = useRef(null);
-  const [intervalId, setIntervalId] = useState(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [intervalId, setIntervalId] = useState<number>(0);
 
   // Canvas and game settings
   const width = 500;
@@ -44,7 +44,7 @@ function BrickBreaker() {
   const backcolor = "grey";
 
   // Function to draw the ball
-  const drawBall = (ctx) => {
+  const drawBall = (ctx: CanvasRenderingContext2D) => {
     ctx.fillStyle = ballcolor;
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, ballRadius, 0, Math.PI * 2, true);
@@ -53,7 +53,7 @@ function BrickBreaker() {
   };
 
   // Function to draw the paddle
-  const drawPaddle = (ctx) => {
+  const drawPaddle = (ctx: CanvasRenderingContext2D) => {
     ctx.fillStyle = paddlecolor;
     ctx.beginPath();
     ctx.rect(paddleX, height - paddleh, paddlew, paddleh);
@@ -62,7 +62,7 @@ function BrickBreaker() {
   };
 
   // Function to draw the bricks
-  const drawBricks = (ctx) => {
+  const drawBricks = (ctx: CanvasRenderingContext2D) => {
     for (let i = 0; i < nrows; i++) {
       for (let j = 0; j < ncols; j++) {
         if (bricks[i][j]) {
@@ -82,7 +82,7 @@ function BrickBreaker() {
   };
 
   // Function to clear the canvas
-  const clearCanvas = (ctx) => {
+  const clearCanvas = (ctx: CanvasRenderingContext2D) => {
     ctx.fillStyle = backcolor;
     ctx.clearRect(0, 0, width, height);
     ctx.fillRect(0, 0, width, height);
@@ -120,7 +120,13 @@ function BrickBreaker() {
 
     // Game play.
 
-    const ctx = canvasRef.current.getContext("2d");
+    const ctx = canvasRef.current?.getContext("2d");
+
+    if (ctx === null) {
+      // Handle the error case where the context is not available
+      console.error("Failed to get the canvas context");
+      return; // or handle this case as appropriate
+    }
 
     // Update ball position
     let newBall = { ...ball };
@@ -186,10 +192,12 @@ function BrickBreaker() {
     setBall(newBall);
 
     // Clear canvas and redraw everything
-    clearCanvas(ctx);
-    drawBall(ctx);
-    drawPaddle(ctx);
-    drawBricks(ctx);
+    if (ctx) {
+      clearCanvas(ctx);
+      drawBall(ctx);
+      drawPaddle(ctx);
+      drawBricks(ctx);
+    }
   };
 
   useEffect(() => {
@@ -222,7 +230,13 @@ function BrickBreaker() {
   }, []);
 
   // Mouse movement handler for paddle control
-  const handleMouseMove = (event) => {
+  const handleMouseMove = (
+    event: React.MouseEvent<HTMLCanvasElement, MouseEvent>
+  ) => {
+    if (!canvasRef.current) {
+      console.error("Canvas ref is null");
+      return;
+    }
     const canvasPos = canvasRef.current.getBoundingClientRect();
     const mouseX = event.clientX - canvasPos.left;
 
