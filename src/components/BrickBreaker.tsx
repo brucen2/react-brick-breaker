@@ -114,8 +114,16 @@ function BrickBreaker() {
 
   // Function to update the game state
   const updateGameState = () => {
+    // Check to see if the game is paused.
     if (isPaused) {
       return; // Pause the game update loop
+    }
+
+    // Check if all bricks are broken.
+    if (score === nrows * ncols) {
+      clearInterval(intervalId); // Stop the game loop
+      setStatus("You Win!");
+      return;
     }
 
     // Game play.
