@@ -16,6 +16,9 @@ function BrickBreaker() {
   const paddlew = 75; // Paddle width (pixels)
   const [paddleX, setPaddleX] = useState(250 - paddlew / 2);
 
+  // State for score
+  const [score, setScore] = useState(0);
+
   // Other variables
   const canvasRef = useRef(null);
   const [intervalId, setIntervalId] = useState(null);
@@ -90,6 +93,9 @@ function BrickBreaker() {
     // Reset paddle position
     setPaddleX(250 - paddlew / 2);
 
+    // Reset score
+    setScore(0);
+
     // Restart the game loop if it's not running
     if (!intervalId) {
       const interval = setInterval(updateGameState, 10);
@@ -145,6 +151,7 @@ function BrickBreaker() {
       bricks[row][col]
     ) {
       newBall.dy = -newBall.dy; // Rebound the ball
+      setScore((score) => score + 1); // Increment score
 
       // Set the hit brick to false
       const newBricks = bricks.map((brickRow, rIndex) =>
@@ -199,6 +206,7 @@ function BrickBreaker() {
         onMouseMove={handleMouseMove}
       />
       <p>Mouse moves platform &bull; Press any key to pause</p>
+      <p>Score: {score}</p>
       <button className="btn btn-primary" onClick={resetGame}>
         Play Again
       </button>
