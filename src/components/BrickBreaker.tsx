@@ -1,255 +1,207 @@
 import React, { useRef, useState, useEffect } from "react";
 
 function BrickBreaker() {
-  // Global Variables
-  let x = 200; // starting horizontal position of ball
-  let y = 250; // starting vertical position of ball
-  let dx = 1; // amount ball should move horizontally
-  let dy = -3; // amount ball should move vertically
+  // State for ball position and velocity
+  const [ball, setBall] = useState({ x: 200, y: 250, dx: 1, dy: -3 });
 
-  let paddleh = 10; // paddle height (pixels)
-  let paddlew = 75; // paddle width (pixels)
-  let canvasMinX = 0; // minimum canvas x bounds
-  let canvasMaxX = 0; // maximum canvas x bounds
-  let [intervalId, setIntervalId] = useState(null);
-  let nrows = 9; // number of rows of bricks
-  let ncols = 9; // number of columns of bricks
-  let brickHeight = 15; // height of each brick
-  let padding = 1; // how far apart bricks are spaced
-
-  let ballRadius = 10; // size of ball (pixels)
-  // Change colors of bricks -- add as many colors as you like
-  let brick_colors = ["darkred", "yellow", "darkgreen", "darkblue", "indigo"];
-  let paddlecolor = "black";
-  let ballcolor = "white";
-  let backcolor = "grey";
-  let status = "";
-  let score = 0; // store the number of bricks eliminated
-  let paused = false; // keeps track of whether the game is paused (true) or not (false)
-  let [bricks, setBricks] = useState(
+  // State for bricks
+  const nrows = 9; // Number of rows of bricks
+  const ncols = 9; // Number of columns of bricks
+  const [bricks, setBricks] = useState(
     Array.from({ length: nrows }, () => Array(ncols).fill(true))
   );
-  let [mouseX, setMouseX] = useState(0);
 
+  // State for paddle
+  const paddleh = 10; // Paddle height (pixels)
+  const paddlew = 75; // Paddle width (pixels)
+  const [paddleX, setPaddleX] = useState(250 - paddlew / 2);
+
+  // Other variables
   const canvasRef = useRef(null);
+  const [intervalId, setIntervalId] = useState(null);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
+  // Canvas and game settings
+  const width = 500;
+  const height = 300;
+  const brickHeight = 15;
+  const padding = 1;
+  const ballRadius = 10;
+  const brickWidth = width / ncols - 1;
 
-    //-------------------------
-    // FUNCTION DECLARATIONS
-    //-------------------------
-    // initialize game
+  // Colors
+  const brick_colors = ["darkred", "yellow", "darkgreen", "darkblue", "indigo"];
+  const paddlecolor = "black";
+  const ballcolor = "white";
+  const backcolor = "grey";
 
-    var width = 500;
-    var height = 300;
-    var paddlex = width / 2;
-    var brickWidth = width / ncols - 1;
-    var canvasMinX = 0;
-    var canvasMaxX = canvasMinX + width;
+  // Function to draw the ball
+  const drawBall = (ctx) => {
+    ctx.fillStyle = ballcolor;
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ballRadius, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.fill();
+  };
 
-    function init() {
-      var width = 500;
-      var height = 300;
-      var paddlex = width / 2;
-      var brickWidth = width / ncols - 1;
-      var canvasMinX = 0;
-      var canvasMaxX = canvasMinX + width;
-      init_bricks();
-      clear();
-      draw_bricks();
-      start_animation();
-    }
+  // Function to draw the paddle
+  const drawPaddle = (ctx) => {
+    ctx.fillStyle = paddlecolor;
+    ctx.beginPath();
+    ctx.rect(paddleX, height - paddleh, paddlew, paddleh);
+    ctx.closePath();
+    ctx.fill();
+  };
 
-    function reload() {
-      stop_animation();
-      x = 200; // starting horizontal position of ball
-      y = 250; // starting vertical position of ball
-      dx = 1; // amount ball should move horizontally
-      dy = -3; // amount ball should move vertically
-      score = 0;
-      status = "";
-      // update_status_text();
-      init();
-    }
-
-    // used to draw the ball
-    function circle(x, y, r) {
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2, true);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    // used to draw each brick & the paddle
-    function rect(x, y, w, h) {
-      ctx.beginPath();
-      ctx.rect(x, y, w, h);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    // clear the screen in between drawing each animation
-    function clear() {
-      ctx.fillStyle = backcolor;
-      ctx.clearRect(0, 0, width, height);
-      rect(0, 0, width, height);
-    }
-
-    let onMouseMove = (event) => {
-      if (canvas) {
-        const canvasPos = canvas.getBoundingClientRect();
-        const mouseX = event.clientX - canvasPos.left;
-        if (mouseX > 0 && mouseX < width) {
-          paddlex = Math.max(mouseX - paddlew / 2, 0);
-          paddlex = Math.min(width - paddlew, paddlex);
+  // Function to draw the bricks
+  const drawBricks = (ctx) => {
+    for (let i = 0; i < nrows; i++) {
+      for (let j = 0; j < ncols; j++) {
+        if (bricks[i][j]) {
+          ctx.fillStyle = brick_colors[(i + j) % brick_colors.length];
+          ctx.beginPath();
+          ctx.rect(
+            j * (brickWidth + padding) + padding,
+            i * (brickHeight + padding) + padding,
+            brickWidth,
+            brickHeight
+          );
+          ctx.closePath();
+          ctx.fill();
         }
       }
-    };
+    }
+  };
 
-    canvas.addEventListener("mousemove", onMouseMove);
+  // Function to clear the canvas
+  const clearCanvas = (ctx) => {
+    ctx.fillStyle = backcolor;
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillRect(0, 0, width, height);
+  };
 
-    function onKeyPress(evt) {
-      pause();
+  // Function to reset the game
+  const resetGame = () => {
+    // Reset ball position and velocity
+    setBall({ x: 200, y: 250, dx: 1, dy: -3 });
+
+    // Reset bricks
+    setBricks(Array.from({ length: nrows }, () => Array(ncols).fill(true)));
+
+    // Reset paddle position
+    setPaddleX(250 - paddlew / 2);
+
+    // Restart the game loop if it's not running
+    if (!intervalId) {
+      const interval = setInterval(updateGameState, 10);
+      setIntervalId(interval);
+    }
+  };
+
+  // Function to update the game state
+  const updateGameState = () => {
+    const ctx = canvasRef.current.getContext("2d");
+
+    // Update ball position
+    let newBall = { ...ball };
+    newBall.x += newBall.dx;
+    newBall.y += newBall.dy;
+
+    // Wall collision (left/right)
+    if (
+      newBall.x + newBall.dx > width - ballRadius ||
+      newBall.x + newBall.dx < ballRadius
+    ) {
+      newBall.dx = -newBall.dx;
     }
 
-    function pause() {
-      if (status != "Game Over") {
-        if (paused) {
-          // if paused, begin animation again
-          start_animation();
-          status = "";
-          update_status_text();
-        } else {
-          // if unpaused, clear the animation
-          status = "Paused";
-          update_status_text();
-          stop_animation();
-        }
-        paused = !paused;
+    // Wall collision (top)
+    if (newBall.y + newBall.dy < ballRadius) {
+      newBall.dy = -newBall.dy;
+    }
+
+    // Paddle collision
+    if (newBall.y + newBall.dy > height - ballRadius - paddleh) {
+      if (newBall.x > paddleX && newBall.x < paddleX + paddlew) {
+        newBall.dy = -newBall.dy;
       }
     }
 
-    // initialize array of bricks to be visible (true)
-    function init_bricks() {
-      const newBricks = Array.from({ length: nrows }, () =>
-        Array(ncols).fill(true)
+    if (newBall.y + ballRadius >= height) {
+      clearInterval(intervalId);
+      return;
+    }
+
+    // Brick collision
+    let rowHeight = brickHeight + padding;
+    let colWidth = brickWidth + padding;
+    let row = Math.floor(newBall.y / rowHeight);
+    let col = Math.floor(newBall.x / colWidth);
+
+    // Check if ball hits a brick
+    if (
+      newBall.y < nrows * rowHeight &&
+      row >= 0 &&
+      col >= 0 &&
+      bricks[row][col]
+    ) {
+      newBall.dy = -newBall.dy; // Rebound the ball
+
+      // Set the hit brick to false
+      const newBricks = bricks.map((brickRow, rIndex) =>
+        brickRow.map((brick, cIndex) => {
+          if (rIndex === row && cIndex === col) {
+            return false; // Brick is hit
+          }
+          return brick;
+        })
       );
       setBricks(newBricks);
     }
 
-    // render the bricks
-    function draw_bricks() {
-      for (let i = 0; i < nrows; i++) {
-        // for each row of bricks
-        for (let j = 0; j < ncols; j++) {
-          // for each column of bricks
-          // set the colors to alternate through
-          // all colors in brick_colors array
-          // modulus (%, aka remainder) ensures the colors
-          // rotate through the whole range of brick_colors
-          ctx.fillStyle = brick_colors[(i + j) % brick_colors.length];
-          if (bricks[i][j]) {
-            rect(
-              j * (brickWidth + padding) + padding,
-              i * (brickHeight + padding) + padding,
-              brickWidth,
-              brickHeight
-            );
-          } // else if bricks[i][j] is false it's already been hit
-        }
-      }
-    }
+    // Update ball state
+    setBall(newBall);
 
-    function draw() {
-      // before drawing, change the fill color
-      ctx.fillStyle = backcolor;
-      clear();
-      ctx.fillStyle = ballcolor;
-      //draw the ball
-      circle(x, y, ballRadius);
-      ctx.fillStyle = paddlecolor;
-      //draw the paddle
-      rect(paddlex, height - paddleh, paddlew, paddleh);
-      draw_bricks();
+    // Clear canvas and redraw everything
+    clearCanvas(ctx);
+    drawBall(ctx);
+    drawPaddle(ctx);
+    drawBricks(ctx);
+  };
 
-      //check if we have hit a brick
-      var rowheight = brickHeight + padding;
-      var colwidth = brickWidth + padding;
-      var row = Math.floor(y / rowheight);
-      var col = Math.floor(x / colwidth);
-      //if so reverse the ball and mark the brick as broken
-      if (y < nrows * rowheight && row >= 0 && col >= 0 && bricks[row][col]) {
-        dy = -dy;
-        bricks[row][col] = false;
-        score += 1;
-        // update_score_text();
-      }
+  useEffect(() => {
+    const interval = setInterval(updateGameState, 10);
+    setIntervalId(interval);
 
-      //contain the ball by rebouding it off the walls of the canvas
-      if (x + dx > width || x + dx < 0) dx = -dx;
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, [ball, bricks, paddleX]);
 
-      if (y + dy < 0) {
-        dy = -dy;
-      } else if (y + dy > height - paddleh) {
-        // check if the ball is hitting the
-        // paddle and if it is rebound it
-        if (x > paddlex && x < paddlex + paddlew) {
-          dy = -dy;
-        }
-      }
-      if (y + dy > 300) {
-        //game over, so stop the animation
-        status = "Game Over";
-        // update_status_text();
-        return;
-        // stop_animation();
-      }
-      x += dx;
-      y += dy;
-    }
+  // Mouse movement handler for paddle control
+  const handleMouseMove = (event) => {
+    const canvasPos = canvasRef.current.getBoundingClientRect();
+    const mouseX = event.clientX - canvasPos.left;
 
-    function update_score_text() {
-      // You can send data to your HTML
-      // just like setting styles in CSS
-      // Put <div id="score"></div> in
-      // your HTML for this text to display
-      // $("#score").text("Score: " + score);
-    }
+    // Calculate new paddle position
+    let newPaddleX = mouseX - paddlew / 2;
 
-    function update_status_text() {
-      // You can send data to your HTML
-      // just like setting styles in CSS
-      // Put <div id="score"></div> in
-      // your HTML for this text to display
-      // $("#status").text(status);
-    }
+    // Ensure the paddle stays within the canvas
+    newPaddleX = Math.max(newPaddleX, 0); // Prevents the paddle from going beyond the left edge
+    newPaddleX = Math.min(newPaddleX, width - paddlew); // Prevents the paddle from going beyond the right edge
 
-    function start_animation() {
-      if (intervalId === null) {
-        // Only start a new interval if one isn't already running
-        const newIntervalId = setInterval(draw, 10);
-        setIntervalId(newIntervalId);
-      }
-    }
-
-    function stop_animation() {
-      if (intervalId !== null) {
-        clearInterval(intervalId);
-        setIntervalId(null); // Reset the interval ID after clearing
-      }
-    }
-
-    // Commands
-    init();
-  }, [x]);
+    setPaddleX(newPaddleX);
+  };
 
   return (
     <div>
-      <canvas ref={canvasRef} width={500} height={300} />
+      <canvas
+        ref={canvasRef}
+        width={width}
+        height={height}
+        onMouseMove={handleMouseMove}
+      />
       <p>Mouse moves platform &bull; Press any key to pause</p>
-      <button className="btn btn-primary">Play Again</button>
+      <button className="btn btn-primary" onClick={resetGame}>
+        Play Again
+      </button>
     </div>
   );
 }
