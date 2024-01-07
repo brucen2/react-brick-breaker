@@ -273,7 +273,7 @@ function BrickBreaker() {
         onMouseMove={handleMouseMove}
       />
       <p>
-        Mouse moves platform &bull; Press any key to pause
+        Mouse Moves Platform &bull; Press Any Key To Pause
         <br />
         Score: {score}
         <br />
