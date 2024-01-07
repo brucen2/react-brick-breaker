@@ -119,13 +119,6 @@ function BrickBreaker() {
       return; // Pause the game update loop
     }
 
-    // Check if all bricks are broken.
-    if (score === nrows * ncols) {
-      clearInterval(intervalId); // Stop the game loop
-      setStatus("You Win!");
-      return;
-    }
-
     // Game play.
 
     const ctx = canvasRef.current?.getContext("2d");
@@ -194,6 +187,19 @@ function BrickBreaker() {
         })
       );
       setBricks(newBricks);
+    }
+
+    // Check if all bricks are broken.
+    if (score === nrows * ncols) {
+      clearInterval(intervalId); // Stop the game loop
+      setStatus("You Win!");
+      if (ctx) {
+        clearCanvas(ctx);
+        drawBall(ctx);
+        drawPaddle(ctx);
+        drawBricks(ctx);
+      }
+      return;
     }
 
     // Update ball state
