@@ -118,6 +118,8 @@ function BrickBreaker() {
       return; // Pause the game update loop
     }
 
+    // Game play.
+
     const ctx = canvasRef.current.getContext("2d");
 
     // Update ball position
@@ -146,7 +148,7 @@ function BrickBreaker() {
     }
 
     // End the game if the paddle is missed
-    if (newBall.y + ballRadius >= height) {
+    if (newBall.y + ballRadius - 10 >= height) {
       clearInterval(intervalId);
       setStatus("Game Over");
       return;
