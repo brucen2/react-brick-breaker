@@ -22,6 +22,9 @@ function BrickBreaker() {
   // State for pause
   const [isPaused, setIsPaused] = useState(false);
 
+  // State for status
+  const [status, setStatus] = useState(" ");
+
   // Other variables
   const canvasRef = useRef(null);
   const [intervalId, setIntervalId] = useState(null);
@@ -87,6 +90,9 @@ function BrickBreaker() {
 
   // Function to reset the game
   const resetGame = () => {
+    // Reset status
+    setStatus(" ");
+
     // Reset ball position and velocity
     setBall({ x: 200, y: 250, dx: 1, dy: -3 });
 
@@ -139,8 +145,10 @@ function BrickBreaker() {
       }
     }
 
+    // End the game if the paddle is missed
     if (newBall.y + ballRadius >= height) {
       clearInterval(intervalId);
+      setStatus("Game Over");
       return;
     }
 
@@ -191,7 +199,16 @@ function BrickBreaker() {
 
   // Handle key press for pause/unpause
   const handleKeyPress = () => {
-    setIsPaused((prev) => !prev);
+    setIsPaused((prev) => {
+      if (!prev) {
+        // If the game is going to be paused
+        setStatus("Paused");
+      } else {
+        // If the game is going to be unpaused
+        setStatus(" ");
+      }
+      return !prev;
+    });
   };
 
   useEffect(() => {
@@ -225,8 +242,13 @@ function BrickBreaker() {
         height={height}
         onMouseMove={handleMouseMove}
       />
-      <p>Mouse moves platform &bull; Press any key to pause</p>
-      <p>Score: {score}</p>
+      <p>
+        Mouse moves platform &bull; Press any key to pause
+        <br />
+        Score: {score}
+        <br />
+        &nbsp; {status} &nbsp;
+      </p>
       <button className="btn btn-primary" onClick={resetGame}>
         Play Again
       </button>
