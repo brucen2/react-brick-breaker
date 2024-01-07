@@ -19,6 +19,9 @@ function BrickBreaker() {
   // State for score
   const [score, setScore] = useState(0);
 
+  // State for pause
+  const [isPaused, setIsPaused] = useState(false);
+
   // Other variables
   const canvasRef = useRef(null);
   const [intervalId, setIntervalId] = useState(null);
@@ -105,6 +108,10 @@ function BrickBreaker() {
 
   // Function to update the game state
   const updateGameState = () => {
+    if (isPaused) {
+      return; // Pause the game update loop
+    }
+
     const ctx = canvasRef.current.getContext("2d");
 
     // Update ball position
@@ -180,7 +187,20 @@ function BrickBreaker() {
     setIntervalId(interval);
 
     return () => clearInterval(interval); // Cleanup on unmount
-  }, [ball, bricks, paddleX]);
+  }, [ball, bricks, paddleX, isPaused]);
+
+  // Handle key press for pause/unpause
+  const handleKeyPress = () => {
+    setIsPaused((prev) => !prev);
+  };
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyPress);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
+  }, []);
 
   // Mouse movement handler for paddle control
   const handleMouseMove = (event) => {
@@ -191,8 +211,8 @@ function BrickBreaker() {
     let newPaddleX = mouseX - paddlew / 2;
 
     // Ensure the paddle stays within the canvas
-    newPaddleX = Math.max(newPaddleX, 0); // Prevents the paddle from going beyond the left edge
-    newPaddleX = Math.min(newPaddleX, width - paddlew); // Prevents the paddle from going beyond the right edge
+    newPaddleX = Math.max(newPaddleX, 0);
+    newPaddleX = Math.min(newPaddleX, width - paddlew);
 
     setPaddleX(newPaddleX);
   };
